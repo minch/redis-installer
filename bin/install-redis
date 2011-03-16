@@ -45,12 +45,13 @@ if [[ "root"  = "$(whoami)" ]] ; then
   config_path="${config_path:-"/etc/redis"}"
   log_path="${log_path:-"/var/log/redis"}"
   pid_path="${pid_path:-"/var/run/redis"}"
-  data_path="${data_path:-"/var/data/redis"}"
+  data_path="${data_path:-"/mnt/data/redis"}"
   source_path="${source_path:-"$prefix/src"}"
   user="${user:-"redis"}"
   environment="${environment:-production}"
   init_d="${init_d:-"/etc/init.d"}"
-  useradd -r ${user} 2>/dev/null # If the user already exists we don't want to hear about it.
+  # FIXME:  on ubuntu the start command fails unless the user has a shell...
+  useradd -r ${user} -s /bin/sh 2>/dev/null # If the user already exists we don't want to hear about it.
 else
   prefix="${prefix:-"$HOME"}"
   redis_path="${redis_path:-"${prefix}/.redis"}"
@@ -71,7 +72,7 @@ pidfile="${pidfile:-"redis.pid"}"
 logfile="${logfile:-"redis.log"}"
 dbfile="${dbfile:-"redis.rdb"}"
 timeout="${timeout:-300}"
-databases="${databases:-24}"
+databases="${databases:-6}"
 if [[ "production" = "${environment}" ]] || [[ "staging" = "${environment}" ]] ; then
   appendonly="${appendonly:-yes}"
   loglevel="${loglevel:-notice}"
@@ -109,6 +110,7 @@ if [[ "$result" -eq 0 ]] ; then
 fi
 
 # Switch to it to work out of the $source_path.
+echo "cd $source_path"
 cd $source_path
 
 #
@@ -163,6 +165,9 @@ fi
 # Install redis-server, redis-cli to $prefix
 #
 printf "\nInstalling ${package} ${version} ...\n"
+
+echo "cd $source_path/${package}-${version}/src"
+cd "$source_path/${package}-${version}/src"
 
 cp -f redis-server "${bin_path}/" && cp redis-cli "${bin_path}/"
 
